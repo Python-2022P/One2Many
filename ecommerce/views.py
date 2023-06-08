@@ -1,5 +1,6 @@
 from django.http import HttpRequest,JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
+from django.views import View
 from .models import Company,Product
 import json
 
@@ -18,13 +19,13 @@ def to_product(product:Product) -> dict:
         'price' : product.price
     }
 
-def get_company(request:HttpRequest) -> JsonResponse:
-    if request.method == 'GET':
+class CompanyView(View):
+    def get(self,request:HttpRequest) -> JsonResponse:
         companies = Company.objects.all()
         result = [to_company(company) for company in companies]
 
         return JsonResponse(result,safe=False)
-    elif request.method == 'POST':
+    def post(self,request:HttpRequest) -> JsonResponse:
         data_json = request.body.decode()
         data = json.loads(data_json)
         
@@ -34,8 +35,8 @@ def get_company(request:HttpRequest) -> JsonResponse:
             return JsonResponse({'status':'website yo\'q'})
         
         company = Company.objects.create(
-            first_name = data['name'],
-            last_name = data['website']
+            name = data['name'],
+            website = data['website']
         )
 
         company.save()
@@ -43,12 +44,12 @@ def get_company(request:HttpRequest) -> JsonResponse:
         return JsonResponse(to_company(company))
 
 
-def get_company_id(request:HttpRequest,id) -> JsonResponse:
-    if request.method == "GET":
+class CompanyIdView(View):
+    def get(self,request:HttpRequest,id) -> JsonResponse:
         company = Company.objects.get(id = id)
         return JsonResponse(to_company(company))
     
-    elif request.method == "PUT":
+    def put(self,request:HttpRequest,id) -> JsonResponse:
         try:
             company = Company.objects.get(id = id)
         except ObjectDoesNotExist:
@@ -67,7 +68,7 @@ def get_company_id(request:HttpRequest,id) -> JsonResponse:
 
         return JsonResponse(to_company(company))
     
-    elif request.method == "DELETE":
+    def delete(self,request:HttpRequest,id) -> JsonResponse:
         try:
             company = Company.objects.get(id=id)
         except ObjectDoesNotExist:
@@ -77,8 +78,8 @@ def get_company_id(request:HttpRequest,id) -> JsonResponse:
 
         return JsonResponse({'status': 'ok'})
     
-def get_product(request:HttpRequest,id) -> JsonResponse:
-    if request.method == 'GET':
+class ProductView(View):
+    def get(self,request:HttpRequest,id) -> JsonResponse:
         try:
             company = Company.objects.get(id = id)
             products = Product.objects.filter(company = company)
@@ -88,7 +89,7 @@ def get_product(request:HttpRequest,id) -> JsonResponse:
         results = [to_product(product) for product in products]
         return JsonResponse(results,safe=False)
     
-    elif request.method == 'POST':
+    def post(self,request:HttpRequest,id) -> JsonResponse:
         data_json = request.body.decode()
         data = json.loads(data_json)
 
@@ -104,17 +105,23 @@ def get_product(request:HttpRequest,id) -> JsonResponse:
 
         return JsonResponse(to_product(product))
     
-def get_product_id(request:HttpRequest,company_id,id) -> JsonResponse:
-    try:
-        company = Company.objects.get(id = company_id)
-        product = Product.objects.get(company=company,id = id)
-    except ObjectDoesNotExist:
-        return JsonResponse({'status': 'object does not exist!'})
+class ProductIdView(View):
+    
 
-    if request.method == 'GET':
+    def get(self,request:HttpRequest,company_id,id) -> JsonResponse:
+        try:
+            company = Company.objects.get(id = company_id)
+            product = Product.objects.get(company=company,id = id)
+        except ObjectDoesNotExist:
+            return JsonResponse({'status': 'object does not exist!'})
         return JsonResponse(to_product(product))
 
-    elif request.method == 'PUT':
+    def put(self,request:HttpRequest,company_id,id) -> JsonResponse:
+        try:
+            company = Company.objects.get(id = company_id)
+            product = Product.objects.get(company=company,id = id)
+        except ObjectDoesNotExist:
+            return JsonResponse({'status': 'object does not exist!'})
         data_json = request.body.decode()
         data = json.loads(data_json)
 
@@ -127,7 +134,12 @@ def get_product_id(request:HttpRequest,company_id,id) -> JsonResponse:
 
         return JsonResponse(to_product(product))
 
-    elif request.method == 'DELETE':
+    def delete(self,request:HttpRequest,company_id,id) -> JsonResponse:
+        try:
+            company = Company.objects.get(id = company_id)
+            product = Product.objects.get(company=company,id = id)
+        except ObjectDoesNotExist:
+            return JsonResponse({'status': 'object does not exist!'})
         product.delete()
 
         return JsonResponse({'status': 'ok'})
