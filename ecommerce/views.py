@@ -9,3 +9,10 @@ class CompanyView(View):
         companies = Company.objects.all()
 
         return render(request, 'company.html', {'companies': companies})
+
+
+class ProductView(View):
+    def get(self, request: HttpRequest):
+        products = Product.objects.all()
+
+        return render(request, 'product.html', {'products': products, 'title': 'product'})
