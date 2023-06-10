@@ -1,5 +1,6 @@
 from django.http import HttpRequest,JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
+from django.views import View
 from .models import Company,Product
 import json
 
@@ -18,13 +19,15 @@ def to_product(product:Product) -> dict:
         'price' : product.price
     }
 
-def get_company(request:HttpRequest) -> JsonResponse:
-    if request.method == 'GET':
+
+class CompanyView(View):
+    def get(self, request: HttpRequest) -> JsonResponse:
         companies = Company.objects.all()
         result = [to_company(company) for company in companies]
 
         return JsonResponse(result,safe=False)
-    elif request.method == 'POST':
+
+    def post(self, request: HttpRequest) -> JsonResponse:
         data_json = request.body.decode()
         data = json.loads(data_json)
         
@@ -45,8 +48,11 @@ def get_company(request:HttpRequest) -> JsonResponse:
 
 def get_company_id(request:HttpRequest,id) -> JsonResponse:
     if request.method == "GET":
-        company = Company.objects.get(id = id)
-        return JsonResponse(to_company(company))
+        try:
+            company = Company.objects.get(id = id)
+            return JsonResponse(to_company(company))
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "object not found"})
     
     elif request.method == "PUT":
         try:
