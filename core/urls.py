@@ -6,5 +6,5 @@ from ecommerce.views import HomeView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('companies/',include('ecommerce.urls')),
-    path("home/<>str:username", HomeView.as_view()),
+    path("home/<str:username>", HomeView.as_view()),
 ]

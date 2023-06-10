@@ -8,12 +8,11 @@ from django.views import View
 class HomeView(View):
     def get(self, request: HttpRequest, username: str):
         companys=Company.objects.all()
-        for i in companys:
-            products=Product.objects.filter(company=i)
-            context = {
-                'username': username,
-                'phone': i,
-                'products':products
+  
+        context = {
+            'username': username,
+            'phones': companys,
+
             }
         return render(request=request, template_name='index.html', context=context)
 def to_com(company)->dict:
@@ -87,7 +86,9 @@ def get_id_update_com_delete_id(request:HttpRequest,id) -> JsonResponse:
         phone.delete()
         
         return JsonResponse({'status': 'ok'})
-#//////////////////////////////////Many////////////////
+
+
+
 def products_create_get_all(request:HttpRequest,id) -> JsonResponse:
     try:
         company = Company.objects.get(id=id)
